@@ -33,6 +33,20 @@ func AuthRequired(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
+// AuthOptional parses the JWT when present but never blocks the request;
+// anonymous callers continue without a user in the context.
+func AuthOptional(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		header := c.GetHeader("Authorization")
+		if strings.HasPrefix(header, "Bearer ") {
+			if claims, err := util.ParseToken(strings.TrimPrefix(header, "Bearer "), cfg.JWTSecret); err == nil {
+				c.Set(UserKey, claims)
+			}
+		}
+		c.Next()
+	}
+}
+
 // GetUserID extracts the authenticated user id from the context.
 func GetUserID(c *gin.Context) uint {
 	v, ok := c.Get(UserKey)

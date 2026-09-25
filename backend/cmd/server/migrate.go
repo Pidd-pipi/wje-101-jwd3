@@ -18,6 +18,7 @@ func migrate(db *gorm.DB) error {
 		&model.Comment{},
 		&model.Like{},
 		&model.UserFollow{},
+		&model.BeanFavorite{},
 	)
 }
 
@@ -95,6 +96,15 @@ func seed(db *gorm.DB) error {
 		{FollowerID: user2.ID, FollowingID: user.ID},
 	}
 	if err := db.Create(&follows).Error; err != nil {
+		return err
+	}
+
+	beanFavorites := []model.BeanFavorite{
+		{UserID: user.ID, BeanID: beans[0].ID},
+		{UserID: user.ID, BeanID: beans[2].ID},
+		{UserID: user2.ID, BeanID: beans[1].ID},
+	}
+	if err := db.Create(&beanFavorites).Error; err != nil {
 		return err
 	}
 

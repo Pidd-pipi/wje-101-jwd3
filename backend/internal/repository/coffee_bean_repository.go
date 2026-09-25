@@ -39,6 +39,21 @@ func (r *CoffeeBeanRepository) Delete(id uint) error {
 	return nil
 }
 
+// DeleteWithFavorites removes a bean and every favorite relation tied to it in
+// one transaction, so an admin takedown never leaves orphan favorites behind.
+func (r *CoffeeBeanRepository) DeleteWithFavorites(id uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		res := tx.Delete(&model.CoffeeBean{}, id)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return ErrNotFound
+		}
+		return tx.Where("bean_id = ?", id).Delete(&model.BeanFavorite{}).Error
+	})
+}
+
 // List filters beans by origin/process/keyword.
 func (r *CoffeeBeanRepository) List(origin, process, keyword string, page, pageSize int) ([]model.CoffeeBean, int64, error) {
 	var items []model.CoffeeBean

@@ -17,4 +17,6 @@ export interface CoffeeBean {
   flavor_tags: string
   description: string
   created_at: string
+  favorite_count?: number
+  is_favorite?: boolean
 }

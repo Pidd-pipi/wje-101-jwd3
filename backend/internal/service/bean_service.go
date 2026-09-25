@@ -74,9 +74,13 @@ func (s *BeanService) Update(id uint, b *model.CoffeeBean) (*model.CoffeeBean, e
 	return exist, nil
 }
 
-// Delete removes a bean (admin).
+// Delete removes a bean (admin) and cleans up all related favorite relations.
 func (s *BeanService) Delete(id uint) error {
-	if err := s.repo.Delete(id); err != nil {
+	if err := s.repo.DeleteWithFavorites(id); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return util.NewAppError(404, constants.CodeNotFound,
+				fmt.Sprintf("CoffeeBean[id=%d] delete failed: not found", id))
+		}
 		return fmt.Errorf("bean delete: %w", err)
 	}
 	s.logger.Info(fmt.Sprintf(constants.LogBeanDeleteSuccess, id), "id", id)

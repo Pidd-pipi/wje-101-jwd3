@@ -9,6 +9,7 @@ import (
 
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/constants"
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/dto"
+	"github.com/wjecoffeetaste/wjecoffeetaste/internal/middleware"
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/model"
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/service"
 	"github.com/wjecoffeetaste/wjecoffeetaste/internal/util"
@@ -16,13 +17,14 @@ import (
 
 // BeanHandler exposes coffee bean endpoints.
 type BeanHandler struct {
-	svc    *service.BeanService
-	logger *slog.Logger
+	svc         *service.BeanService
+	favoriteSvc *service.BeanFavoriteService
+	logger      *slog.Logger
 }
 
 // NewBeanHandler creates a BeanHandler.
-func NewBeanHandler(svc *service.BeanService, logger *slog.Logger) *BeanHandler {
-	return &BeanHandler{svc: svc, logger: logger}
+func NewBeanHandler(svc *service.BeanService, favoriteSvc *service.BeanFavoriteService, logger *slog.Logger) *BeanHandler {
+	return &BeanHandler{svc: svc, favoriteSvc: favoriteSvc, logger: logger}
 }
 
 // List handles GET /beans.
@@ -43,7 +45,30 @@ func (h *BeanHandler) List(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusOK, dto.OK(dto.PageData{List: items, Total: total, Page: page, Size: pageSize}))
+	c.JSON(http.StatusOK, dto.OK(dto.PageData{List: h.buildBeanItems(c, items), Total: total, Page: page, Size: pageSize}))
+}
+
+// buildBeanItems attaches favorite counts and (for logged-in users) favorite state.
+func (h *BeanHandler) buildBeanItems(c *gin.Context, items []model.CoffeeBean) []dto.BeanItemResponse {
+	result := make([]dto.BeanItemResponse, 0, len(items))
+	ids := make([]uint, 0, len(items))
+	for _, b := range items {
+		ids = append(ids, b.ID)
+	}
+	counts, _ := h.favoriteSvc.CountByBeans(ids)
+	userID := middleware.GetUserID(c)
+	var favored map[uint]bool
+	if userID > 0 {
+		favored, _ = h.favoriteSvc.FindExistingBeanIDs(userID, ids)
+	}
+	for _, b := range items {
+		result = append(result, dto.BeanItemResponse{
+			CoffeeBean:    b,
+			FavoriteCount: counts[b.ID],
+			IsFavorite:    favored != nil && favored[b.ID],
+		})
+	}
+	return result
 }
 
 // Create handles POST /beans (admin).
