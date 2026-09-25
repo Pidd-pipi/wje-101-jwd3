@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { login as apiLogin, register as apiRegister, getProfile } from '@/api/user'
 import { clearToken, getToken, setToken } from '@/utils/storage'
+import { useBeanStore } from '@/stores/useBeanStore'
 import type { UserInfo } from '@/constants/user'
 
 export const useUserStore = defineStore('user', () => {
@@ -34,6 +35,8 @@ export const useUserStore = defineStore('user', () => {
     token.value = ''
     user.value = null
     clearToken()
+    // Favorites are per-account: drop the previous account's view state.
+    useBeanStore().resetFavorites()
   }
 
   return { token, user, isLoggedIn, isAdmin, login, register, fetchProfile, logout }

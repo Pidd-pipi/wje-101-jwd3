@@ -23,6 +23,7 @@ func Setup(cfg *config.Config, db *gorm.DB, logger *slog.Logger) *gin.Engine {
 	commentRepo := repository.NewCommentRepository(db)
 	likeRepo := repository.NewLikeRepository(db)
 	followRepo := repository.NewUserFollowRepository(db)
+	beanFavoriteRepo := repository.NewBeanFavoriteRepository(db)
 
 	userService := service.NewUserService(userRepo, logger, cfg)
 	noteService := service.NewNoteService(noteRepo, logger)
@@ -31,11 +32,12 @@ func Setup(cfg *config.Config, db *gorm.DB, logger *slog.Logger) *gin.Engine {
 	commentService := service.NewCommentService(commentRepo, noteRepo, logger)
 	likeService := service.NewLikeService(likeRepo, noteRepo, logger)
 	followService := service.NewFollowService(followRepo, logger)
+	beanFavoriteService := service.NewBeanFavoriteService(beanFavoriteRepo, beanRepo, logger)
 
 	userHandler := handler.NewUserHandler(userService, noteService, followService, likeService, logger)
 	noteHandler := handler.NewNoteHandler(noteService, likeService, logger)
 	recipeHandler := handler.NewRecipeHandler(recipeService, logger)
-	beanHandler := handler.NewBeanHandler(beanService, logger)
+	beanHandler := handler.NewBeanHandler(beanService, beanFavoriteService, logger)
 	commentHandler := handler.NewCommentHandler(commentService, logger)
 	likeHandler := handler.NewLikeHandler(likeService, logger)
 	followHandler := handler.NewFollowHandler(followService, logger)

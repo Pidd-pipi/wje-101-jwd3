@@ -25,8 +25,11 @@ import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/useUserStore'
+import { useBeanStore } from '@/stores/useBeanStore'
+import { takePendingFavoriteBean } from '@/utils/storage'
 
 const store = useUserStore()
+const beanStore = useBeanStore()
 const route = useRoute()
 const router = useRouter()
 const mode = ref<'login' | 'register'>('login')
@@ -50,6 +53,16 @@ async function submit() {
     } else {
       await store.register({ username: form.username, email: form.email, password: form.password, bio: form.bio })
       ElMessage.success('注册成功')
+    }
+    // Coming back from a favorite click: keep the bean the user wanted.
+    const pendingBeanId = takePendingFavoriteBean()
+    if (pendingBeanId) {
+      try {
+        await beanStore.addFavorite(pendingBeanId)
+        ElMessage.success('已为你收藏刚才选中的豆种')
+      } catch {
+        // Error toast already shown; the user lands back on the bean library.
+      }
     }
     router.push((route.query.redirect as string) || '/')
   } finally {

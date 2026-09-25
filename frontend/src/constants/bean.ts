@@ -18,3 +18,8 @@ export interface CoffeeBean {
   description: string
   created_at: string
 }
+
+export interface BeanItem extends CoffeeBean {
+  favorite_count: number
+  is_favorited: boolean
+}

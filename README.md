@@ -66,7 +66,7 @@ wje-101/
 │   ├── cmd/server/            # main.go + migrate/seed
 │   └── internal/
 │       ├── config/            # DB/JWT/限流/上传配置
-│       ├── model/             # 7 个实体
+│       ├── model/             # 8 个实体
 │       ├── repository/        # 按实体分文件
 │       ├── service/           # 按实体分文件
 │       ├── handler/           # 按实体分文件 + upload
@@ -132,10 +132,13 @@ wje-101/
 | GET | /api/v1/recipes | 公开 | 冲煮配方列表/筛选 |
 | GET | /api/v1/recipes/:id | 公开 | 冲煮配方详情 |
 | POST | /api/v1/recipes | 登录（限流） | 分享冲煮配方 |
-| GET | /api/v1/beans | 公开 | 咖啡豆库列表/筛选 |
+| GET | /api/v1/beans | 公开 | 咖啡豆库列表/筛选（登录时附带每只豆子的收藏数与当前用户是否已收藏） |
+| GET | /api/v1/beans/favorites | 登录 | 我的收藏列表/筛选（按账号隔离） |
+| POST | /api/v1/beans/:id/favorite | 登录（限流） | 收藏咖啡豆（重复收藏幂等） |
+| DELETE | /api/v1/beans/:id/favorite | 登录 | 取消收藏（幂等） |
 | POST | /api/v1/beans | admin（限流） | 新增咖啡豆 |
 | PUT | /api/v1/beans/:id | admin | 更新咖啡豆 |
-| DELETE | /api/v1/beans/:id | admin | 删除咖啡豆 |
+| DELETE | /api/v1/beans/:id | admin | 删除（下架）咖啡豆并清理相关收藏 |
 
 ## 枚举出现位置清单
 

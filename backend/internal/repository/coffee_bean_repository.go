@@ -39,6 +39,23 @@ func (r *CoffeeBeanRepository) Delete(id uint) error {
 	return nil
 }
 
+// DeleteWithFavorites takes down a bean and clears its favorites in one transaction.
+func (r *CoffeeBeanRepository) DeleteWithFavorites(id uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		res := tx.Delete(&model.CoffeeBean{}, id)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return ErrNotFound
+		}
+		if err := tx.Where("bean_id = ?", id).Delete(&model.BeanFavorite{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 // List filters beans by origin/process/keyword.
 func (r *CoffeeBeanRepository) List(origin, process, keyword string, page, pageSize int) ([]model.CoffeeBean, int64, error) {
 	var items []model.CoffeeBean

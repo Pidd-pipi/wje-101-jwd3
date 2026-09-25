@@ -2,10 +2,11 @@
   <el-container class="shell">
     <el-header class="header">
       <div class="brand" @click="$router.push('/')">☕ 咖啡品鉴社区</div>
-      <el-menu mode="horizontal" :ellipsis="false" router :default-active="$route.path">
+      <el-menu mode="horizontal" :ellipsis="false" router :default-active="activeMenu">
         <el-menu-item index="/">首页</el-menu-item>
         <el-menu-item index="/note/create">写品鉴笔记</el-menu-item>
         <el-menu-item index="/beans">豆种库</el-menu-item>
+        <el-menu-item v-if="isLoggedIn" index="/beans?tab=favorites">我的收藏</el-menu-item>
         <el-menu-item index="/recipes">配方广场</el-menu-item>
       </el-menu>
       <div class="user-area">
@@ -31,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/useUserStore'
 import { useAuth } from '@/hooks/useAuth'
@@ -39,6 +41,13 @@ import UserAvatar from '@/components/common/UserAvatar.vue'
 const store = useUserStore()
 const { isLoggedIn, user } = useAuth()
 const router = useRouter()
+
+const activeMenu = computed(() => {
+  if (router.currentRoute.value.path === '/beans' && router.currentRoute.value.query.tab === 'favorites') {
+    return '/beans?tab=favorites'
+  }
+  return router.currentRoute.value.path
+})
 
 function onCommand(cmd: string) {
   if (cmd === 'profile') {
